@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Nathan's Tarkov Radar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font: 13px Helvetica, Arial;
+      background-color: black;
+      height: 100%;
+    }
+
+    html {
+      display: table;
+      margin: auto;
+    }
+
+    .coveredImage {
+      position: absolute;
+      z-index: -1;
+      opacity: 75%;
+    }
+  </style>
+</head>
+
+<body ng-app="tarkovradar" ng-controller="main">
+  <div style="overflow:hidden;">
+    <!-- <img src="lab.png" class="coveredImage" ng-style="{transform: 'scale(' + RADAR_SCALE + ', ' + RADAR_SCALE + ')', top: RADAR_RADIUS/2, left: RADAR_RADIUS}"> !-->
+    <canvas id="radarCanvas" width="600" height="600"></canvas>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Radar Zoom</span>
+          <input ng-model='RADAR_SCALE' ng-change="changedValue(FOCUS_PLAYER)" type="range" min="1" max="15" value="10"
+            class="slider" id="radarZoom">
+        </div>
+      </div>
+      <div class="col-sm">
+        <div class="input-group-prepend">
+          <ul class="list-group">
+            <li class="list-group-item">
+              <input type="checkbox" ng-model='HIGHVAUEONLY' ng-change="changedValue(FOCUS_PLAYER)"> High Value Only
+            </li>
+            <li class="list-group-item">
+              <input type="checkbox" ng-model='HIDECORPSES' ng-change="changedValue(FOCUS_PLAYER)"> Hide Corpses
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg">
+        <ul class="list-group" style="overflow-y: scroll; height:100px;">
+          <li class="list-group-item"
+            ng-class="{'list-group-item-warning': exfil.status != 4 && exfil.status != 1, 'list-group-item-success': exfil.status == 4, 'list-group-item-danger': exfil.status == 1}"
+            ng-repeat="exfil in exfils">
+            {{exfil.id}} :
+            {{exfil.status == 1 ? "Closed" : exfil.status == 2 ? "Uncomplete Requirement" : exfil.status == 3 ? "Countdown" : exfil.status == 4 ? "Open" : exfil.status == 5 ? "Pending" : exfil.status == 6 ? "Awaiting Manual Activiation" : "Unknown"}},
+            at time {{exfil.openms / 60}}m {{exfil.hint}}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm" style="max-width: 200;">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Focused Player</span>
+          <select ng-model='FOCUS_PLAYER' class="custom-select"
+            ng-options="player.id as player.name for player in players" ng-change="changedValue(FOCUS_PLAYER)">
+          </select>
+        </div>
+      </div>
+      <div class="col-sm">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon3">Loot Highlight</span>
+          <input ng-model="ITEMSEARCH" type="text" class="form-control" placeholder="Search Item">
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm">
+        <ul class="list-group" style="overflow-y: scroll; height:100px;">
+          <li class="list-group-item" ng-repeat="player in players">
+            <input type="checkbox" ng-checked="TEAMS[player.id].enable" ng-change="changedValue(player.id)"
+              ng-model="TEAMS[player.id].enable"> {{player.name}}
+          </li>
+        </ul>
+      </div>
+      <div class="col-sm">
+        <ul class="list-group" style="overflow-y: scroll; height:100px;">
+          <li class="list-group-item" ng-repeat="item in loot | filter:{name: ITEMSEARCH}">
+            <input type="checkbox" ng-checked="LOOTFILTER[item.signature].enable"
+              ng-change="changedValue(item.signature)" ng-model="LOOTFILTER[item.signature].enable"> {{item.name}}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm" ng-click="$scope.$apply()">Refresh</button>
+  </div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.0/umd/popper.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap.js"></script>
+
+<script>
+  var app = angular.module("tarkovradar", ['ui.bootstrap']);
+</script>
+
+<script src="radar.js"></script>
+
+</html>
