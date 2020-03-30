@@ -26,3 +26,9 @@ It is quite primative and runs rather poorly however it and is an example of how
 
 ## Notice
 I really wouldn't use this for production or expose the web socket server over the internet. I attempted to implement a rubish authentication method that works if your goal is to share it between friends, however the host does not have authentication and is insecure.
+
+#### VMRead
+Thanks to Heep042 for maintaining VMRead, without it this program would not exist.
+
+Extra Notice:
+If you are trying to compile/inject the client internally it will likely hang due to my usage of sleep so please use external only.
