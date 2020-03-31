@@ -5,17 +5,17 @@
 class TarkovSkeletonRoot
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
 
-	TarkovSkeletonRoot(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
-	}
+    TarkovSkeletonRoot(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
+    }
 
-	Matrix3x4 GetLocationMatrixTest()
-	{
+    Matrix3x4 GetLocationMatrixTest()
+    {
         uint64_t m_BoneEnum = GameProcess->Read<uint64_t>(Address + 0x28);
         uint64_t m_TransformArray = GameProcess->Read<uint64_t>(m_BoneEnum + 0x10);
         uint64_t m_TransformA = GameProcess->Read<uint64_t>(m_TransformArray + 0x20);
@@ -31,8 +31,8 @@ public:
         https://www.unknowncheats.me/forum/2332931-post688.html
         https://www.unknowncheats.me/forum/2432035-post995.html
         */
-		return locMatrixDebug;
-	}
+        return locMatrixDebug;
+    }
 
     Vector3 GetCoordsFromMatrixTest()
     {

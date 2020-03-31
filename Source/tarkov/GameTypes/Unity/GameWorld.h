@@ -4,18 +4,18 @@
 class GameWorld
 {
 public:
-	uint64_t Address;
-	bool IsValid;
+    uint64_t Address;
+    bool IsValid;
 
-	GameWorld()
-	{
-		Address = 0x0;
-		IsValid = false;
-	}
+    GameWorld()
+    {
+        Address = 0x0;
+        IsValid = false;
+    }
 
-	GameWorld(uint64_t Addr)
-	{
-		Address = Addr;
-		IsValid = true;
-	}
+    GameWorld(uint64_t Addr)
+    {
+        Address = Addr;
+        IsValid = true;
+    }
 };

@@ -8,22 +8,22 @@
 class TarkovPlayer
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
     std::string ID;
 
-	TarkovPlayer(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
+    TarkovPlayer(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
 
         ID = GetPlayerProfile().GetPlayerID().GetString();
-	}
+    }
 
-	bool IsLocalPlayer()
-	{
-		return GameProcess->Read<uint64_t>(Address + 0x18) ? true : false;
-	}
+    bool IsLocalPlayer()
+    {
+        return GameProcess->Read<uint64_t>(Address + 0x18) ? true : false;
+    }
 
     bool IsScav()
     {
@@ -36,20 +36,20 @@ public:
         return !IsScav() && GetPlayerProfile().GetPlayerInfo().GetPlayerName().GetString().find(" ") != std::string::npos;
     }
 
-    bool operator==(TarkovPlayer& other)
+    bool operator==(TarkovPlayer &other)
     {
         return ID == other.ID;
     }
 
-	TarkovMovementContext GetMovementContext()
-	{
-		return TarkovMovementContext(GameProcess, GameProcess->Read<uint64_t>(Address + 0x38));
-	}
+    TarkovMovementContext GetMovementContext()
+    {
+        return TarkovMovementContext(GameProcess, GameProcess->Read<uint64_t>(Address + 0x38));
+    }
 
-	TarkovPlayerBody GetPlayerBody()
-	{
-		return TarkovPlayerBody(GameProcess, GameProcess->Read<uint64_t>(Address + 0x88));
-	}
+    TarkovPlayerBody GetPlayerBody()
+    {
+        return TarkovPlayerBody(GameProcess, GameProcess->Read<uint64_t>(Address + 0x88));
+    }
 
     TarkovPlayerProfile GetPlayerProfile()
     {
@@ -64,7 +64,6 @@ public:
     void DebugDump()
     {
         printf("Player Dump\n");
-
 
         TarkovPlayerProfile PlayerProfile = GetPlayerProfile();
         printf("Player Name:\t%s\n", PlayerProfile.GetPlayerInfo().GetPlayerName().GetString().c_str());
@@ -87,5 +86,4 @@ public:
         Vector2 ViewAngle2 = GetMovementContext().GetViewAngles2();
         printf("View Angle 2 (x-y):\t%f-%f\n", ViewAngle2.x, ViewAngle2.y);
     }
-
 };

@@ -5,17 +5,17 @@
 class TarkovExfilPoint
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
     uint64_t m_eExfilSettings;
 
-	TarkovExfilPoint(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
+    TarkovExfilPoint(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
 
         m_eExfilSettings = GameProcess->Read<uint64_t>(Address + 0x58);
-	}
+    }
 
     UnityEngineString GetName()
     {
@@ -57,8 +57,8 @@ public:
         return GameProcess->Read<float>(m_eExfilSettings + 0x2C);
     }
 
-	int8_t GetOpenStatus()
-	{
-		return GameProcess->Read<int8_t>(Address + 0xA8); // 1 - Not Open, 2 - Uncomplete Requirement, 3 - Countdown, 4 - Regular/Open, 5 - Pending, 6 - AwaitingManualActivation
-	}
+    int8_t GetOpenStatus()
+    {
+        return GameProcess->Read<int8_t>(Address + 0xA8); // 1 - Not Open, 2 - Uncomplete Requirement, 3 - Countdown, 4 - Regular/Open, 5 - Pending, 6 - AwaitingManualActivation
+    }
 };

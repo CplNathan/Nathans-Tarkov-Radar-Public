@@ -6,8 +6,8 @@
 class UnityGame : public BaseGame
 {
 protected:
-    GameObjectManager GOM{ 0x0, 0x0 };
-    GameWorld LocalGameWorld{ 0x0 };
+    GameObjectManager GOM{0x0, 0x0};
+    GameWorld LocalGameWorld{0x0};
 
     GameWorld FindLocalGameWorld()
     {

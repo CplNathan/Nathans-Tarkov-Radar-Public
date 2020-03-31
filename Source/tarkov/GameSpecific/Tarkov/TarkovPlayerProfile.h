@@ -7,19 +7,19 @@
 class TarkovPlayerProfile
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
 
-	TarkovPlayerProfile(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
-	}
+    TarkovPlayerProfile(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
+    }
 
-	UnityEngineString GetPlayerID()
-	{
-		return UnityEngineString(GameProcess, GameProcess->Read<uint64_t>(Address + 0x10));
-	}
+    UnityEngineString GetPlayerID()
+    {
+        return UnityEngineString(GameProcess, GameProcess->Read<uint64_t>(Address + 0x10));
+    }
 
     TarkovPlayerInfo GetPlayerInfo()
     {

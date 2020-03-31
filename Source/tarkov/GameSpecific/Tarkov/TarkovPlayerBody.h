@@ -5,17 +5,17 @@
 class TarkovPlayerBody
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
 
-	TarkovPlayerBody(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
-	}
+    TarkovPlayerBody(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
+    }
 
-	TarkovSkeletonRoot GetSkeletonRoot()
-	{
-		return TarkovSkeletonRoot(GameProcess, GameProcess->Read<uint64_t>(Address + 0x28));
-	}
+    TarkovSkeletonRoot GetSkeletonRoot()
+    {
+        return TarkovSkeletonRoot(GameProcess, GameProcess->Read<uint64_t>(Address + 0x28));
+    }
 };

@@ -4,15 +4,14 @@
 class BaseGame
 {
 protected:
-    WinProcess* Process;
+    WinProcess *Process;
     uint64_t ModuleBase;
 
 public:
-    void EntryPointModule(WinProcess* InProcess, uint64_t InModuleBase)
+    void EntryPointModule(WinProcess *InProcess, uint64_t InModuleBase)
     {
         Process = InProcess;
         ModuleBase = InModuleBase;
-
 
         printf("Running Implementation\n");
         EntryPointImpl();
@@ -21,5 +20,5 @@ public:
     virtual ~BaseGame() = default;
 
 protected:
-    virtual void EntryPointImpl() {};
+    virtual void EntryPointImpl(){};
 };

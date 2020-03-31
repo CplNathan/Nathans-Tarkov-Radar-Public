@@ -5,21 +5,21 @@
 class TarkovHandsController
 {
 public:
-	WinProcess *GameProcess;
-	uint64_t Address;
+    WinProcess *GameProcess;
+    uint64_t Address;
 
-	TarkovHandsController(WinProcess *GameProc, uint64_t Addr)
-	{
-		GameProcess = GameProc;
-		Address = Addr;
-	}
+    TarkovHandsController(WinProcess *GameProc, uint64_t Addr)
+    {
+        GameProcess = GameProc;
+        Address = Addr;
+    }
 
-	UnityEngineString GetActiveWeaponName()
-	{
+    UnityEngineString GetActiveWeaponName()
+    {
         uint64_t ActiveWeapon = GameProcess->Read<uint64_t>(Address + 0x50);
-		uint64_t WeaponTemplate = GameProcess->Read<uint64_t>(ActiveWeapon + 0x20);
+        uint64_t WeaponTemplate = GameProcess->Read<uint64_t>(ActiveWeapon + 0x20);
         UnityEngineString WeaponName = UnityEngineString(GameProcess, GameProcess->Read<uint64_t>(WeaponTemplate + 0x58));
 
-		return WeaponName;
-	}
+        return WeaponName;
+    }
 };
