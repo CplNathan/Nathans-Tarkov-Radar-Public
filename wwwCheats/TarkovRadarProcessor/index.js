@@ -1,50 +1,289 @@
-const WebSocket = require('ws');
+'use strict';
 
-const MASTER = "owo";
+const io = require('socket.io')(8080, {
+  cors: {
+    origin: '*',
+  }
+});
+const validator = require('./DataTypes');
+const types = validator.dataTypes;
 
-const wss = new WebSocket.Server({ port: 8080 });
+const passcode = "boop";
+const tokenchars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-let players = [];
-let groups = [];
-let loot = [];
-let exfils = [];
-let gamestarted = false;
-let hostconnected = false;
+let session = {
+  "token": randomString(4, tokenchars),
+  "host": false,
+  "start": false,
+  "players": [],
+  "groups": [],
+  "loot": [],
+  "exfils": []
+}
 
-let sessiontoken = randomString(6, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+io.on('connection', socket => {
+  socket.on('authenticate', (data, ack) => {
+    console.log("Client requesting authentication");
+    // Validate the current data structure
+    let expectedData = new types.RegisterObject().dataStructure;
+    let validatedData = validator.validatePacket(data, expectedData);
 
-let hostkeepalive;
+    let validated = validatePasscode(data.Passcode);
+    if (validated) {
+      socket["radarData"] = validatedData;
+      if (socket["radarData"].isHost == true) {
+        let sockets = io.sockets.sockets; // All Sockets
 
-function formSocketMessage(event, message) {
-  let stringify = JSON.stringify({
-    "event": event,
-    "message": message
+        // Disconnect any other hosts
+        var isocket = 0;
+        for (isocket of sockets) {
+          let currentSocket = isocket[1];
+          if (currentSocket["radarData"].isHost && currentSocket.id != socket.id) {
+            console.log("Kicking host with ID: {currentSocket.id}")
+            currentSocket.disconnect();
+          }
+        }
+
+        session["host"] = true;
+        session["token"] = randomString(4, tokenchars);
+
+        console.log("Host Connected");
+      }
+    }
+
+    ack(new types.RegisterResponse(validated).rawData);
   });
 
-  return stringify;
-}
+  socket.on('disconnect', data => {
+    if (socket["radarData"] == undefined)
+      return;
 
-function resetData(newSession) {
-  players = [];
-  loot = [];
-  exfils = [];
-  gamestarted = newSession;
+    if (socket["radarData"].isHost == true) {
+      session["host"] = false;
 
-  if (!newSession)
-    sessiontoken = randomString(6, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
-}
+      console.log("Host Disconnected");
+    }
+  })
 
-function terminatehost(wss) {
-  console.log("Terminating old hosts");
-  wss.clients.forEach(function each(client) {
-    if (client["host"] == true)
-      client.terminate();
+  socket.on('gamestart', data => {
+    session["players"] = [];
+    session["groups"] = [];
+    session["loot"] = [];
+    session["exfils"] = [];
+    session["start"] = true;
+
+    console.log("Game Started");
   });
 
-  hostconnected = false;
+  socket.on('gameend', data => {
+    session["players"] = [];
+    session["groups"] = [];
+    session["loot"] = [];
+    session["exfils"] = [];
+    session["start"] = false;
 
-  resetData(false);
-}
+    console.log("Game Ended");
+  });
+
+  // Player data is not cached and is volatile, send out an update.
+  socket.on('newplayer', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.NewPlayer().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      // Add player to players
+      session["players"].push(validatedData);
+
+      // Find our add group and add player
+      if (validatedData.groupid != "") {
+        let groupIndex = -1;
+        for (group in session["groups"]) {
+          if (session["groups"][group].id == validatedData.groupid) {
+            groupIndex = group;
+            break;
+          }
+        }
+
+        if (groupIndex == -1) {
+          session["groups"].push(
+            {
+              "id": validatedData.groupid,
+              "members": [validatedData.id]
+            }
+          )
+        }
+        else {
+          session["groups"][group].members.push(validatedData)
+        }
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  });
+
+  // Player data is not cached and is volatile, send out an update.
+  socket.on('updateplayer', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.UpdatePlayer().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      // Update the player at the found index
+      for (player in session["players"]) {
+        if (session["players"][player].id == validatedData.id) {
+          session["players"][player].coordinates = validatedData.coordinates;
+          session["players"][player].viewangle = validatedData.viewangle;
+          session["players"][player].weapon = validatedData.weapon;
+          break;
+        }
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  });
+
+  // Player data is not cached and is volatile, send out an update.
+  socket.on('deleteplayer', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.DeletePlayer().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      let removeIndex = -1;
+
+      // Delete the player at the found index
+      for (player in session["players"]) {
+        if (session["players"][player].id == data.id) {
+          removeIndex = player;
+          break;
+        }
+      }
+
+      if (removeIndex != -1) {
+        session["players"].splice(player, 1);
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  });
+
+  // Loot data is cached
+  socket.on('addloot', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.AddLoot().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      let sockets = io.sockets.sockets; // All Sockets
+
+      var isocket = 0;
+      for (isocket of sockets) {
+        let currentSocket = isocket[1];
+        if (!currentSocket["radarData"].isHost) {
+          currentSocket.emit("addloot", validatedData);
+        }
+      }
+
+      session["loot"].push(validatedData);
+    } catch (err) {
+      console.log(err)
+    }
+  });
+
+  // Loot data is cached
+  socket.on('deleteloot', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.DeleteLoot().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      let removeIndex = -1;
+
+      for (item in session["loot"]) {
+        if (session["loot"][item].signature == validatedData.signature) {
+          removeIndex = item;
+          break;
+        }
+      }
+
+      if (removeIndex != -1) {
+        let sockets = io.sockets.sockets; // All Sockets
+
+        var isocket = 0;
+        for (isocket of sockets) {
+          let currentSocket = isocket[1];
+          if (!currentSocket["radarData"].isHost) {
+            currentSocket.emit("addloot", session["loot"][removeIndex]);
+          }
+        }
+
+        session["loot"].splice(removeIndex, 1);
+      }
+    }
+    catch (err) {
+      console.log(err)
+    }
+  });
+
+  socket.on('addexfil', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.AddExfil().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      session["exfils"].push(validatedData);
+    }
+    catch (err) {
+      console.log(err)
+    }
+  });
+
+  socket.on('updateexfil', data => {
+    try {
+      // Validate the current data structure
+      let expectedData = new types.UpdateExfil().dataStructure;
+      let validatedData = validator.validatePacket(data, expectedData);
+
+      // Ensure message is from a host
+      let host = socket["radarData"].isHost;
+      if (!host) return;
+
+      for (exfil in session["exfils"]) {
+        if (session["exfils"][exfil].id == validatedData.id) {
+          session["exfils"][exfil].status = validatedData.status;
+        }
+      }
+    }
+    catch (err) {
+      console.log(err)
+    }
+  });
+});
 
 function randomString(length, chars) {
   let result = '';
@@ -52,162 +291,27 @@ function randomString(length, chars) {
   return result;
 }
 
-function decodeSocketMessage(event, wss, ws) {
-  try {
-    let host = ws["host"] === undefined ? false : ws["host"];
-    event = JSON.parse(event);
-    let data = event.message;
-    switch (event.event) {
-      case "keepalive":
-        if (!host) return;
-        clearTimeout(hostkeepalive);
-        hostkeepalive = setTimeout(function () {
-          terminatehost(wss);
-        }, 30000);
-        break;
-      case "gamestart":
-        if (!host) return;
-        console.log("Game Starting");
-        wss.clients.forEach(function each(client) {
-          if (client["host"] == true || client["authenticated"] == false) return;
-          client.send(formSocketMessage("gamestart"));
-        });
-        resetData(true);
-        break;
-      case "gameend":
-        if (!host) return;
-        console.log("Game Ending");
-        wss.clients.forEach(function each(client) {
-          if (client["host"] == true || client["authenticated"] == false) return;
-          client.send(formSocketMessage("gameend"));
-        });
-        resetData(false);
-        break;
-      case "newplayer":
-        if (!host) return;
-        players.push(data);
-        if (data.groupid != "") {
-          let foundgroup = false;
-          for (group in groups) {
-            if (groups[group].id == data.groupid) {
-              groups[group].members.push(data)
-              foundgroup = true;
-              break;
-            }
-          }
-          if (!foundgroup) {
-            groups.push(
-              {
-                "id": data.groupid,
-                "members": [data.id]
-              }
-            )
-          }
-        }
-        break;
-      case "updateplayer":
-        if (!host) return;
-        for (player in players) {
-          if (players[player].id == data.id) {
-            players[player].coordinates = data.coordinates;
-            players[player].viewangle = data.viewangle;
-            players[player].weapon = data.weapon;
-            break;
-          }
-        }
-        break;
-      case "deleteplayer":
-        if (!host) return;
-        for (player in players) {
-          if (players[player].id == data.id) {
-            console.log("Deleting player: " + players[player].id);
-            players.splice(player, 1);
-            break;
-          }
-        }
-        break;
-      case "addloot":
-        if (!host) return;
-        wss.clients.forEach(function each(client) {
-          if (client["host"] == true || client["authenticated"] == false) return;
-          client.send(formSocketMessage("addloot", { "item": data }));
-        });
-        loot.push(data);
-        break;
-      case "deleteloot":
-        if (!host) return;
-        console.log("Deleting Loot: " + data.signature);
-        for (item in loot) {
-          if (loot[item].signature == data.signature) {
-            wss.clients.forEach(function each(client) {
-              if (client["host"] == true || client["authenticated"] == false) return;
-              client.send(formSocketMessage("removeloot", { "item": loot[item] }));
-            });
-            loot.splice(item, 1);
-            break;
-          }
-        }
-        break;
-      case "addexfil":
-        if (!host) return;
-        exfils.push(data);
-        break;
-      case "updateexfil":
-        if (!host) return;
-        for (exfil in exfils) {
-          if (exfils[exfil].id == data.id) {
-            exfils[exfil].status = data.status;
-          }
-        }
-        break;
-      case "host":
-        terminatehost(wss);
-
-        clearTimeout(hostkeepalive);
-        hostkeepalive = setTimeout(function () {
-          terminatehost(wss);
-        }, 30000);
-
-        hostconnected = true;
-        ws["host"] = true;
-        break;
-      case "authenticate":
-        if (data.token == sessiontoken || data.token == MASTER) {
-          ws["authenticated"] = true;
-        }
-        else {
-          ws.terminate();
-        }
-        break;
-    }
-
-  }
-  catch (err) {
-    console.log("Invalid Message Format");
-    console.log(err); // todo comment
-  }
-
-  return event.message;
+function validatePasscode(input) {
+  return (input === passcode) || input == session["token"];
 }
 
-wss.on('connection', function connection(ws) {
-  ws["host"] = false;
-  ws["authenticated"] = false;
-  for (item in loot) {
-    ws.send(formSocketMessage("addloot", { "item": loot[item] }));
+function TickVolatileData() {
+  let sockets = io.sockets.sockets; // All Sockets
+
+  let datatransmit = session;
+  datatransmit["loot"] = [];
+
+  var isocket = 0;
+  for (isocket of sockets) {
+    let currentSocket = isocket[1];
+
+    if (currentSocket["radarData"] == undefined)
+      continue;
+
+    if (!currentSocket["radarData"].isHost) {
+      currentSocket.emit("tick", datatransmit);
+    }
   }
-  ws.on('message', function incoming(message) {
-    decodeSocketMessage(message, wss, ws);
-  });
-});
+}
 
-setInterval(function () {
-  tick();
-}, 25);
-
-function tick() {
-  wss.clients.forEach(function each(client) {
-    if (client["host"] == true || client["authenticated"] == false) return;
-    client.send(formSocketMessage("tick", { "host": hostconnected, "start": gamestarted, "players": players, "groups": groups, "exfils": exfils, "token": sessiontoken }));
-  });
-};
+setInterval(TickVolatileData, 25);

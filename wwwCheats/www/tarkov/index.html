@@ -3,7 +3,7 @@
 
 <head>
   <title>Nathan's Tarkov Radar</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
   <style>
     html,
     body {
@@ -48,7 +48,7 @@
         <div class="input-group-prepend">
           <ul class="list-group">
             <li class="list-group-item">
-              <input type="checkbox" ng-model='HIGHVAUEONLY' ng-change="changedValue(FOCUS_PLAYER)"> High Value Only
+              <input type="checkbox" ng-model='FOCUSONLY' ng-change="changedValue(FOCUS_PLAYER)"> Hide Non-Selected
             </li>
             <li class="list-group-item">
               <input type="checkbox" ng-model='HIDECORPSES' ng-change="changedValue(FOCUS_PLAYER)"> Hide Corpses
@@ -62,9 +62,11 @@
         <ul class="list-group" style="overflow-y: scroll; height:100px;">
           <li class="list-group-item"
             ng-class="{'list-group-item-warning': exfil.status != 4 && exfil.status != 1, 'list-group-item-success': exfil.status == 4, 'list-group-item-danger': exfil.status == 1}"
-            ng-repeat="exfil in exfils">
+            ng-repeat="exfil in data.exfils">
             {{exfil.id}} :
-            {{exfil.status == 1 ? "Closed" : exfil.status == 2 ? "Uncomplete Requirement" : exfil.status == 3 ? "Countdown" : exfil.status == 4 ? "Open" : exfil.status == 5 ? "Pending" : exfil.status == 6 ? "Awaiting Manual Activiation" : "Unknown"}},
+            {{exfil.status == 1 ? "Closed" : exfil.status == 2 ? "Uncomplete Requirement" : exfil.status == 3 ?
+            "Countdown" : exfil.status == 4 ? "Open" : exfil.status == 5 ? "Pending" : exfil.status == 6 ? "Awaiting
+            Manual Activiation" : "Unknown"}},
             at time {{exfil.openms / 60}}m {{exfil.hint}}
           </li>
         </ul>
@@ -75,7 +77,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text" id="basic-addon3">Focused Player</span>
           <select ng-model='FOCUS_PLAYER' class="custom-select"
-            ng-options="player.id as player.name for player in players" ng-change="changedValue(FOCUS_PLAYER)">
+            ng-options="player.id as player.name for player in data.players" ng-change="changedValue(FOCUS_PLAYER)">
           </select>
         </div>
       </div>
@@ -89,7 +91,7 @@
     <div class="row">
       <div class="col-sm">
         <ul class="list-group" style="overflow-y: scroll; height:100px;">
-          <li class="list-group-item" ng-repeat="player in players">
+          <li class="list-group-item" ng-repeat="player in data.players">
             <input type="checkbox" ng-checked="TEAMS[player.id].enable" ng-change="changedValue(player.id)"
               ng-model="TEAMS[player.id].enable"> {{player.name}}
           </li>
@@ -97,7 +99,7 @@
       </div>
       <div class="col-sm">
         <ul class="list-group" style="overflow-y: scroll; height:100px;">
-          <li class="list-group-item" ng-repeat="item in loot | filter:{name: ITEMSEARCH}">
+          <li class="list-group-item" ng-repeat="item in data.loot | filter:{name: ITEMSEARCH}">
             <input type="checkbox" ng-checked="LOOTFILTER[item.signature].enable"
               ng-change="changedValue(item.signature)" ng-model="LOOTFILTER[item.signature].enable"> {{item.name}}
           </li>
@@ -108,11 +110,12 @@
   </div>
 </body>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.0/umd/popper.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.7.8/angular.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.0/ui-bootstrap.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/popper.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="js/ui-bootstrap.js"></script>
+<script src="js/socket.io.min.js"></script>
 
 <script>
   var app = angular.module("tarkovradar", ['ui.bootstrap']);

@@ -39,7 +39,7 @@ var canvassprite, ctxsprite;
 var canvasoverlay, ctxoverlay;
 
 var focusedplayer;
-var FOCUS_PLAYER, TEAMS, LOOTFILTER, HIGHVAUEONLY, HIDECORPSES;
+var FOCUS_PLAYER, TEAMS, LOOTFILTER, FOCUSONLY, HIDECORPSES;
 
 var ENEMYTEAMSRUNTIME = [];
 
@@ -87,7 +87,7 @@ function update(data) {
     if (data.FOCUS_PLAYER !== undefined) FOCUS_PLAYER = data.FOCUS_PLAYER;
     if (data.TEAMS !== undefined) TEAMS = data.TEAMS;
     if (data.LOOTFILTER !== undefined) LOOTFILTER = data.LOOTFILTER;
-    if (data.HIGHVAUEONLY !== undefined) HIGHVAUEONLY = data.HIGHVAUEONLY;
+    if (data.FOCUSONLY !== undefined) FOCUSONLY = data.FOCUSONLY;
     if (data.HIDECORPSES !== undefined) HIDECORPSES = data.HIDECORPSES;
 }
 
@@ -103,7 +103,7 @@ function init(data) {
     FOCUS_PLAYER = data.FOCUS_PLAYER;
     TEAMS = data.TEAMS;
     LOOTFILTER = data.LOOTFILTER;
-    HIGHVAUEONLY = data.HIGHVAUEONLY;
+    FOCUSONLY = data.FOCUSONLY;
     HIDECORPSES = data.HIDECORPSES;
 
     canvas.width = RADAR_RADIUS * 2;
@@ -263,14 +263,13 @@ function render(data) {
         let screenpos = w2s(focusedplayer, item);
 
         let focus = LOOTFILTER[item.signature] !== undefined ? LOOTFILTER[item.signature]["enable"] : false;
-        let highvalue = item.highvalue;
-        if (highvalue || focus) { /* Render high value line */
+        if (focus) { /* Render high value line */
             if (!item.corpse)
                 drawLine(ctx, [RADAR_RADIUS, RADAR_RADIUS], screenpos);
 
             HVLoot = true;
         }
-        else if (HIGHVAUEONLY) {
+        else if (FOCUSONLY) {
             continue;
         }
 
@@ -283,13 +282,13 @@ function render(data) {
 
         /* render elevation, if scav is higher or lower show that by an up or downward triangle */
         if (Math.abs(focusedplayer.coordinates[1] - item.coordinates[1]) <= 2) /* check if altitude is equal with tolerance of 5 */
-            drawSprite(ctx, screenpos, highvalue ? 8 : 5);
+            drawSprite(ctx, screenpos, focus ? 8 : 5);
         else if (focusedplayer.coordinates[1] > item.coordinates[1])
-            drawSprite(ctx, screenpos, highvalue ? 7 : 4);
+            drawSprite(ctx, screenpos, focus ? 7 : 4);
         else
-            drawSprite(ctx, screenpos, highvalue ? 6 : 3);
+            drawSprite(ctx, screenpos, focus ? 6 : 3);
 
-        drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 2], item.name, highvalue ? "#380474" : "#2F4F4F");
+        drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 2], item.name, focus ? "#380474" : "#2F4F4F");
     }
     ctx.strokeStyle = "#380474";
     ctx.closePath();

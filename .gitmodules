@@ -1,0 +1,19 @@
+[submodule "Source/lib/rapidjson"]
+	path = Source/lib/rapidjson
+	url = https://github.com/Tencent/rapidjson
+[submodule "Source/lib/websocketpp"]
+	path = Source/lib/websocketpp
+	url = https://github.com/zaphoyd/websocketpp
+[submodule "Source/lib/asio"]
+	path = Source/lib/asio
+	url = https://github.com/chriskohlhoff/asio
+[submodule "Source/lib/socketio"]
+	path = Source/lib/socketio
+	url = https://github.com/socketio/socket.io-client-cpp
+[submodule "Source/lib/catch"]
+	path = Source/lib/catch
+	url = https://github.com/catchorg/Catch2
+	branch = v2.x
+[submodule "Source/lib/vmread"]
+	path = Source/lib/vmread
+	url = https://github.com/h33p/vmread

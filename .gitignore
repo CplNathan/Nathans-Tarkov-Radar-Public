@@ -1,6 +1,12 @@
 build/*
+build
+/build
 *.o
 *.swp
 *.swo
 *.vscode
 *.code-workspace
+.vs
+/.vs
+.vscode
+/.vscode
