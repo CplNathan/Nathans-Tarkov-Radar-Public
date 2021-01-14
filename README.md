@@ -7,33 +7,30 @@ A collection of applications that make up my Tarkov radar.
 - Interface Client (/wwwCheats/www/)
 
 ## Model
-#### Client
-The client handles all the logic for reading the data from the game thanks to VMRead.
+#### Linux Client
+The Linux host client reads memory from the game running in a virtual machine using Vmread.
 (https://github.com/Heep042/vmread)
+The client can easily by updated to support PCILeech by templating out the read functions.
+Offsets need to be updated, find the LGW offset, and mono-dissect using cheat engine to find everything you need.
 
 #### Relay Server
-The relay server takes the input from the program running on the host machine and relays it to other authenticated clients.
-
-It is compatible with any program that can interface with it, meaning you can design **your own rendering implementation** to display the results in an overlay.
+The relay server is a proxy used to transmit the game data from the Linux client to supporting interfaces, custom interfaces can be made to take advantage of the relay server.
 
 #### Interface Client
-The interface client is based in JavaScript and displays information in a top-down radar fashion.
-The idea was to host this on a web-server allowing friends to easily view it if they wanted.
+The interface is a web-based JavaScript client that renders the information received from the relay server, the provided interface renders a top-down radar and supports loot filtering.
+The idea being to share access to friends using only a web browser, minimizing detection vectors.
 
 **Works only with Chrome or Firefox with special features enabled, see: [OffscreenCanvas Compatibility](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas#Browser_compatibility)**
-
-It is quite primitive and runs rather poorly however it is an example of how you could integrate your own solution.
 
 ![Radar Image](https://i.imgur.com/mnl79g1.png)
 
 ## Notice
-I really wouldn't use this for production or expose the web socket server over the internet. I attempted to implement a rubbish authentication method that works if your goal is to share it between friends.
-However, keep in mind the host does not have authentication and is insecure.
+I attempted to add some basic authentication using a token but really it is probably trivial to crack and does not provide any real security.
 
 #### VMRead
-Thanks to Heep042 for maintaining VMRead, without it this program would not exist.
+The Linux client relies on Vmread, thank you Heep042 for making such an easy-to-use library.
 
 Extra Notice:
-If you are trying to compile/inject the client internally it will likely hang due to my usage of sleep so, please use external only.
+Vmread supports internal and external operation, however the client only works externally.
 
-For examples on how to setup the environment please check out the VMRead thread on unknown cheats.
+For examples on how to setup the environment please check out the VMRead thread on unknowncheats or look at the enclosing readme.
