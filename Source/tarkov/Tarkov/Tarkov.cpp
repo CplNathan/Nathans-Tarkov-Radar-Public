@@ -19,10 +19,6 @@ void TarkovGame::GameMain()
 
         printf("Game Object Manager: %lx\tLocal Game World: %lx\n", GOM.GetAddress(), LocalGameWorld);
 
-        std::list<TarkovPlayer> TransmittedPlayers;
-        std::list<TarkovLootItem> TransmittedLoot;
-        std::list<TarkovExfilPoint> TransmittedExfils;
-
         auto gameReady = [this]() {
             bool GOMValid = !(GOM.GetAddress() == 0x0);
             bool LGWValid = !(LocalGameWorld == 0x0);
@@ -123,7 +119,6 @@ std::list<TarkovExfilPoint> TarkovGame::GetExfilArray()
     std::list<TarkovExfilPoint> ExfilList;
 
     uint64_t m_eExfilController = GameProcess->Read<uint64_t>(GameProcess->Read<uint64_t>(LocalGameWorld + 0x18) + 0x20);
-    //uint64_t m_eExfilController = GameProcess->Read<uint64_t>(GameProcess->Read<uint64_t>(LocalGameWorld + 0x20) + 0x20); // scav
 
     int64_t m_eExfilListSize = GameProcess->Read<int64_t>(m_eExfilController + 0x18);
     for (int i = 0; i < m_eExfilListSize; i++)
