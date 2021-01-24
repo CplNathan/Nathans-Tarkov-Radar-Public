@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+wwwCheats/www/tarkov/js/* linguist-vendored
+wwwCheats/www/tarkov/css/* linguist-vendored
