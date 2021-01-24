@@ -100,13 +100,13 @@ public:
             return;
 
         std::list<TrackedMember<TarkovPlayer>> OldPlayers;
-        for (TrackedMember<TarkovPlayer> Player : SentPlayers)
+        for (const TrackedMember<TarkovPlayer>& Player : SentPlayers)
         {
             if (Player.i < i)
                 OldPlayers.push_back(Player);
         }
 
-        for (TrackedMember<TarkovPlayer> Player : OldPlayers)
+        for (const TrackedMember<TarkovPlayer>& Player : OldPlayers)
         {
             auto it = std::find(SentPlayers.begin(), SentPlayers.end(), Player.Member);
             Socket->emit("deleteplayer", TarkovMessageBuilder::DeletePlayerMessage(Player.Member));
@@ -142,13 +142,13 @@ public:
             return;
 
         std::list<TrackedMember<TarkovLootItem>> OldLoot;
-        for (TrackedMember<TarkovLootItem> Loot : SentLoot)
+        for (const TrackedMember<TarkovLootItem>& Loot : SentLoot)
         {
             if (Loot.i < i)
                 OldLoot.push_back(Loot);
         }
 
-        for (TrackedMember<TarkovLootItem> Loot : OldLoot)
+        for (const TrackedMember<TarkovLootItem>& Loot : OldLoot)
         {
             auto it = std::find(SentLoot.begin(), SentLoot.end(), Loot.Member);
             Socket->emit("deleteloot", TarkovMessageBuilder::DeleteLootMessage(Loot.Member));
@@ -191,9 +191,9 @@ public:
         else
         {
             Socket->emit("gameend");
-            SentExfils.empty();
-            SentLoot.empty();
-            SentPlayers.empty();
+            SentExfils.clear();
+            SentLoot.clear();
+            SentPlayers.clear();
         }
     }
 

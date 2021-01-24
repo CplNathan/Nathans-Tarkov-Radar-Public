@@ -63,9 +63,16 @@ private:
     {
         uint64_t m_lItemBasicInfo = GetBasicInfo();
 
-        std::string result;
+        //std::string result;
         uint64_t m_lItemName = GameProcess->Read<uint64_t>(m_lItemBasicInfo + 0x60);
 
+        char buff[100];
+        GameProcess->Read(m_lItemName, &buff[0], sizeof(buff));
+
+        std::string Name(buff);
+        Name.erase(std::find(Name.begin(), Name.end(), '\0'), Name.end());
+
+        /*
         for (int i = 0; i <= 100; i++)
         {
             char CurrentChar = GameProcess->Read<char>(m_lItemName + i);
@@ -76,8 +83,9 @@ private:
             if (IsAlphabet(CurrentChar))
                 result.push_back(CurrentChar);
         }
+        */
 
-        return result;
+        return Name;
     }
 
     Vector3 GetLootLocation()

@@ -59,12 +59,12 @@ public:
 
     TarkovHandsController GetPlayerHandsController()
     {
-        return TarkovHandsController(GameProcess, GameProcess->Read<uint64_t>(Address + 0x488)); //Needs new offsets
+        return TarkovHandsController(GameProcess, GameProcess->Read<uint64_t>(Address + 0x488)); // 24/01/21 - These offsets may be out of date? Either way it does not work. - This used to work
     }
 
     TarkovPlayerHealth GetPlayerHealth()
     {
-        return TarkovPlayerHealth(GameProcess, GameProcess->Read<uint64_t>(Address + 0x470)); //Does not work
+        return TarkovPlayerHealth(GameProcess, GameProcess->Read<uint64_t>(Address + 0x470)); // 24/01/21 - These offsets may be out of date? Either way it does not work. - This never worked
     }
 
     void DebugDump()

@@ -44,7 +44,7 @@ threadcxx = cxx.find_library('pthread', required : true)
 vmread_files = ['lib/vmread/mem.c', 'lib/vmread/wintools.c', 'lib/vmread/pmparser.c', 'lib/vmread/vmmem.c']
 hlapi_files = ['lib/vmread/hlapi/windll.cpp', 'lib/vmread/hlapi/winprocess.cpp', 'lib/vmread/hlapi/winprocesslist.cpp']
 socketio_files = ['lib/socketio/src/sio_client.cpp', 'lib/socketio/src/sio_socket.cpp', 'lib/socketio/src/internal/sio_client_impl.cpp', 'lib/socketio/src/internal/sio_packet.cpp']
-tarkov_files = ['main.cpp', 'tarkov/Tarkov/Tarkov.cpp', 'tarkov/Helper/pattern_scan.cpp']
+tarkov_files = ['main.cpp', 'tarkov/Tarkov/Tarkov.cpp']
 
 inccustomlibs = [include_directories('tarkov'), include_directories('socket'), include_directories('lib/asio/asio/include'), include_directories('lib/catch/include'), include_directories('lib/rapidjson/include'), include_directories('lib/websocketpp'), include_directories('lib/socketio/src'), include_directories('lib/vmread')]
 

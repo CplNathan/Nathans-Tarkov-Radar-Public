@@ -10,6 +10,8 @@ public:
     {
     }
 
+    // 24/01/21 - These offsets may be out of date? Either way it does not work.
+
     int GetMaxHealthSum()
     {
         uint64_t m_pBodyController = GameProcess->Read<uint64_t>(Address + 0x18);

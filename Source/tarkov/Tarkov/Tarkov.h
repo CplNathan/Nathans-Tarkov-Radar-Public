@@ -3,7 +3,6 @@
 #include "TarkovPlayer.h"
 #include "TarkovLootItem.h"
 #include "TarkovExfilPoint.h"
-#include "Helper/pattern_scan.h"
 
 #include <list>
 
@@ -26,9 +25,9 @@ public:
 
     int32_t GetPlayerCount();
 
-    std::list<TarkovPlayer> GetAllPlayers();
+    std::vector<TarkovPlayer> GetAllPlayers();
 
-    std::list<TarkovLootItem> GetAllLoot();
+    std::vector<TarkovLootItem> GetAllLoot();
 
-    std::list<TarkovExfilPoint> GetExfilArray();
+    std::vector<TarkovExfilPoint> GetExfilArray();
 };

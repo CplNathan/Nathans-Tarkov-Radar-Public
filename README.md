@@ -6,6 +6,9 @@ A collection of applications that make up my Tarkov radar.
 - Relay Server (/wwwCheats/TarkovRadarProcessor/)
 - Interface Client (/wwwCheats/www/)
 
+## Plans
+I plan to swap vmread for Heep's new memflow library when a stable C release is available, check it out it looks really amazing! (and supports many more DMA methods): https://github.com/memflow/memflow
+
 ## Model
 #### Linux Client
 The Linux host client reads memory from the game running in a virtual machine using Vmread.
