@@ -1,5 +1,3 @@
-'use strict';
-
 const io = require('socket.io')(8080, {
   cors: {
     origin: '*',
@@ -31,6 +29,9 @@ io.on('connection', socket => {
     let validated = validatePasscode(data.Passcode);
     if (validated) {
       socket["radarData"] = validatedData;
+      for (item in session["loot"]) {
+        socket.emit("addloot", session["loot"][item]);
+      }
       if (socket["radarData"].isHost == true) {
         let sockets = io.sockets.sockets; // All Sockets
 
@@ -38,6 +39,10 @@ io.on('connection', socket => {
         var isocket = 0;
         for (isocket of sockets) {
           let currentSocket = isocket[1];
+
+          if (currentSocket["radarData"] == undefined)
+            continue;
+
           if (currentSocket["radarData"].isHost && currentSocket.id != socket.id) {
             console.log("Kicking host with ID: {currentSocket.id}")
             currentSocket.disconnect();
@@ -93,8 +98,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       // Add player to players
       session["players"].push(validatedData);
@@ -134,8 +138,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       // Update the player at the found index
       for (player in session["players"]) {
@@ -159,8 +162,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       let removeIndex = -1;
 
@@ -188,17 +190,14 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       let sockets = io.sockets.sockets; // All Sockets
 
       var isocket = 0;
       for (isocket of sockets) {
         let currentSocket = isocket[1];
-        if (!currentSocket["radarData"].isHost) {
-          currentSocket.emit("addloot", validatedData);
-        }
+        currentSocket.emit("addloot", validatedData);
       }
 
       session["loot"].push(validatedData);
@@ -215,8 +214,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       let removeIndex = -1;
 
@@ -253,8 +251,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       session["exfils"].push(validatedData);
     }
@@ -270,8 +267,7 @@ io.on('connection', socket => {
       let validatedData = validator.validatePacket(data, expectedData);
 
       // Ensure message is from a host
-      let host = socket["radarData"].isHost;
-      if (!host) return;
+      if (!validateHost(socket, data)) return;
 
       for (exfil in session["exfils"]) {
         if (session["exfils"][exfil].id == validatedData.id) {
@@ -295,6 +291,21 @@ function validatePasscode(input) {
   return (input === passcode) || input == session["token"];
 }
 
+function validateHost(socket, data) {
+  if (socket["radarData"] == undefined) {
+    return false;
+  }
+
+  let host = socket["radarData"].isHost;
+
+  if (!host) {
+    socket.disconnect();
+    //socket.emit(new types.RegisterResponse(validated).rawData);
+  }
+
+  return host;
+}
+
 function TickVolatileData() {
   let sockets = io.sockets.sockets; // All Sockets
 
@@ -305,12 +316,7 @@ function TickVolatileData() {
   for (isocket of sockets) {
     let currentSocket = isocket[1];
 
-    if (currentSocket["radarData"] == undefined)
-      continue;
-
-    if (!currentSocket["radarData"].isHost) {
-      currentSocket.emit("tick", datatransmit);
-    }
+    currentSocket.emit("tick", datatransmit);
   }
 }
 

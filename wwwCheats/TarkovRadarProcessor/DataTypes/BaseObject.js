@@ -109,6 +109,7 @@ class AddLoot extends Packet
                 "z": 0
             },
             "corpse": false,
+            "highvalue": false,
             "signature": ""
         }
     }
@@ -133,7 +134,12 @@ class AddExfil extends Packet
             "hint": "",
             "status": 0,
             "openms": 0,
-            "chance": 0
+            "chance": 0,
+            "coordinates": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
         }
     }
 }

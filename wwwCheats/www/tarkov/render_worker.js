@@ -15,7 +15,10 @@ var colours = [
     ['#3B5323', 'square'],
     ['#3333ff', 'triup'],
     ['#3333ff', 'tridown'],
-    ['#3333ff', 'square']
+    ['#3333ff', 'square'],
+    ['#228B22', 'circle'],
+    ['#FFBF00', 'circle'],
+    ['#FF0000', 'circle']
 ];
 
 onmessage = function (e) {
@@ -135,6 +138,9 @@ function init(data) {
         else if (colours[colour][1] == "square") {
             ctxsprite.rect(x - SPRITE_RADIUS, y - SPRITE_RADIUS, SPRITE_DIAMETER, SPRITE_DIAMETER);
         }
+        else if (colours[colour][1] == "circle") {
+            ctxsprite.arc(x, y, SPRITE_RADIUS, 0, 2 * Math.PI, false);
+        }
         ctxsprite.fillStyle = colours[colour][0];
         ctxsprite.closePath();
         ctxsprite.fill();
@@ -160,7 +166,7 @@ function RotatePoint(point, center, angle) {
 
 function w2s(focusedplayer, cplayer, invertx = true) {
     /* get relative screenpos to focused player */
-    var screenpos = [focusedplayer.coordinates[0] - cplayer.coordinates[0], focusedplayer.coordinates[2] - cplayer.coordinates[2]];
+    var screenpos = [focusedplayer.coordinates["x"] - cplayer.coordinates["x"], focusedplayer.coordinates["z"] - cplayer.coordinates["z"]];
 
     /* scale */
     screenpos[0] *= RADAR_SCALE;
@@ -175,7 +181,7 @@ function w2s(focusedplayer, cplayer, invertx = true) {
     screenpos[1] += RADAR_RADIUS;
 
     /* rotate it based on current player viewangle */
-    screenpos = RotatePoint(screenpos, [RADAR_RADIUS, RADAR_RADIUS], -focusedplayer.viewangle[0]);
+    screenpos = RotatePoint(screenpos, [RADAR_RADIUS, RADAR_RADIUS], -focusedplayer.viewangle["x"]);
 
     /* floor */
     screenpos[0] = Math.floor(screenpos[0]);
@@ -186,7 +192,7 @@ function w2s(focusedplayer, cplayer, invertx = true) {
 
 /* World distance helper */
 function wdistance(focusedplayer, cplayer) {
-    var screenpos = [focusedplayer.coordinates[0] - cplayer.coordinates[0], focusedplayer.coordinates[2] - cplayer.coordinates[2]];
+    var screenpos = [focusedplayer.coordinates["x"] - cplayer.coordinates["x"], focusedplayer.coordinates["z"] - cplayer.coordinates["z"]];
     var distance = Math.sqrt(Math.pow(screenpos[0], 2) + Math.pow(screenpos[1], 2));
     distance = Math.round(distance);
 
@@ -234,6 +240,7 @@ function render(data) {
     const players = data.players;
     const groups = data.groups;
     const loot = data.loot;
+    const exfils = data.exfils;
 
     /* clear full canvas */
     ctx.clearRect(0, 0, RADAR_RADIUS * 2, RADAR_RADIUS * 2);
@@ -262,7 +269,7 @@ function render(data) {
         let distance = wdistance(focusedplayer, item);
         let screenpos = w2s(focusedplayer, item);
 
-        let focus = LOOTFILTER[item.signature] !== undefined ? LOOTFILTER[item.signature]["enable"] : false;
+        let focus = (LOOTFILTER[item.signature] !== undefined ? LOOTFILTER[item.signature]["enable"] : false) || loot.highvalue;
         if (focus) { /* Render high value line */
             if (!item.corpse)
                 drawLine(ctx, [RADAR_RADIUS, RADAR_RADIUS], screenpos);
@@ -281,9 +288,9 @@ function render(data) {
             continue;
 
         /* render elevation, if scav is higher or lower show that by an up or downward triangle */
-        if (Math.abs(focusedplayer.coordinates[1] - item.coordinates[1]) <= 2) /* check if altitude is equal with tolerance of 5 */
+        if (Math.abs(focusedplayer.coordinates["y"] - item.coordinates["y"]) <= 2) /* check if altitude is equal with tolerance of 5 */
             drawSprite(ctx, screenpos, focus ? 8 : 5);
-        else if (focusedplayer.coordinates[1] > item.coordinates[1])
+        else if (focusedplayer.coordinates["y"] > item.coordinates["y"])
             drawSprite(ctx, screenpos, focus ? 7 : 4);
         else
             drawSprite(ctx, screenpos, focus ? 6 : 3);
@@ -351,19 +358,19 @@ function render(data) {
             continue;
 
         {
-            let facingpos = RotatePoint([screenpos[0], screenpos[1] + SPRITE_RADIUS * 5], screenpos, -((player.viewangle[0] - focusedplayer.viewangle[0] - 180) * -1));
+            let facingpos = RotatePoint([screenpos[0], screenpos[1] + SPRITE_RADIUS * 5], screenpos, -((player.viewangle["x"] - focusedplayer.viewangle["x"] - 180) * -1));
             if (player.id != FOCUS_PLAYER)
                 drawLine(ctx, screenpos, facingpos)
         }
 
-        if (Math.abs(focusedplayer.coordinates[1] - player.coordinates[1]) <= 2)
+        if (Math.abs(focusedplayer.coordinates["y"] - player.coordinates["y"]) <= 2)
             drawSprite(ctx, screenpos, team ? 8 : player.isscav ? 2 : 12);
-        else if (focusedplayer.coordinates[1] > player.coordinates[1])
+        else if (focusedplayer.coordinates["y"] > player.coordinates["y"])
             drawSprite(ctx, screenpos, team ? 7 : player.isscav ? 1 : 11);
         else
             drawSprite(ctx, screenpos, team ? 6 : player.isscav ? 0 : 10);
 
-        drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 4], player.name + " : " + player.membertype + " (" + parseFloat(Math.abs(focusedplayer.coordinates[1] - player.coordinates[1])).toFixed(2) + ") (" + distance + "m)", team ? "#380474" : player.isscav ? "#4d4dff" : "#3333ff");
+        drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 4], player.name + " : " + player.membertype + " (" + parseFloat(Math.abs(focusedplayer.coordinates["y"] - player.coordinates["y"])).toFixed(2) + ") (" + distance + "m)", team ? "#380474" : player.isscav ? "#4d4dff" : "#3333ff");
         
         // We could draw the player weapon but it got a bit cluttered
         //drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 2], player.weapon, team ? "#380474" : player.isscav ? "#4d4dff" : "#3333ff", "center", char_radius - 2);
@@ -371,6 +378,20 @@ function render(data) {
     ctx.strokeStyle = "white";
     ctx.closePath();
     ctx.stroke()
+
+    /* iterate over all exfils */
+    for (let exfil of exfils) {
+        let distance = wdistance(focusedplayer, exfil);
+        let screenpos = w2s(focusedplayer, exfil);
+
+        /* render */
+        if (distance * RADAR_SCALE > RADAR_RADIUS)
+            continue;
+
+        drawSprite(ctx, screenpos, exfil.status == 4 ? 13 : exfil.status == 1 ? 15 : 14);
+
+        drawText(ctx, [screenpos[0], screenpos[1] - SPRITE_RADIUS * 4], exfil.id, exfil.status == 4 ? "#228B22" : exfil.status == 1 ? "#FF0000" : "#FFBF00");
+    }
 
     /* Render some basic info */
     drawText(ctx, [50, 100], "x" + RADAR_SCALE, "#380474", "left", 15);

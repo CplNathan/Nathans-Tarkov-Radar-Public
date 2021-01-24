@@ -1,7 +1,5 @@
-'use strict';
-
 angular.module("tarkovradar").controller("main", ['$scope', function ($scope) {
-    let oldurl = 'ws://127.0.0.1:8080'
+    let oldurl = 'http://' + window.location.hostname + ':8080'
 
     let canvas = $("#radarCanvas")[0];
     let ctx = canvas.getContext("bitmaprenderer");
@@ -14,15 +12,11 @@ angular.module("tarkovradar").controller("main", ['$scope', function ($scope) {
     $scope.FOCUSONLY = false;
     $scope.HIDECORPSES = false;
 
-    $scope.loot = [];
-    $scope.players = [];
-    $scope.groups = [];
-    $scope.exfils = [];
-
     canvas.width = $scope.RADAR_RADIUS * 2;
     canvas.height = $scope.RADAR_RADIUS * 2;
 
     const dummydata = { "host": false, "start": false, "players": [], "loot": [], "exfils": [], "groups": [], "token": "NOT-AUTHENTICATED" };
+    $scope.data = dummydata;
 
     let render_worker = new Worker('render_worker.js');
 
@@ -37,6 +31,7 @@ angular.module("tarkovradar").controller("main", ['$scope', function ($scope) {
     render_worker.postMessage({ "event": "init", "canvas": offscreenBuffer, "sprite": offscreenSprite, "overlay": offscreenOverlay, "RADAR_RADIUS": $scope.RADAR_RADIUS, "RADAR_SCALE": $scope.RADAR_SCALE, "FOCUS_PLAYER": $scope.FOCUS_PLAYER, "TEAMS": $scope.TEAMS, "LOOTFILTER": $scope.LOOTFILTER, "FOCUSONLY": $scope.FOCUSONLY, "HIDECORPSES": $scope.HIDECORPSES }, [offscreenBuffer, offscreenSprite, offscreenOverlay]);
 
     let render_behind = 0;
+    let shouldprompt = true;
     render_worker.addEventListener('message', function (e) {
         if (e.data.msg === 'render') {
             ctx.transferFromImageBitmap(e.data.bitmap);
@@ -50,6 +45,8 @@ angular.module("tarkovradar").controller("main", ['$scope', function ($scope) {
             return;
 
         $scope.data = {
+            "host": data.host,
+            "start": data.start,
             "players": data.players,
             "groups": data.groups,
             "exfils": data.exfils,
@@ -62,75 +59,78 @@ angular.module("tarkovradar").controller("main", ['$scope', function ($scope) {
     }
 
     function connect() {
-        let url = "";
-        while (url == "" || url == null)
-            url = prompt("Please enter the server host address", oldurl)
-        oldurl = url;
+        if (shouldprompt) {
+            shouldprompt = false;
+            let url = "";
+            while (url == "" || url == null)
+                url = prompt("Please enter the server host address", oldurl)
+            oldurl = url;
+            shouldprompt = true;
 
-        var socket = io.connect(url, {
-            'reconnection': true
-        });
+            var socket = io.connect(url, {
+                'reconnection': true,
+                'secure': true
+            });
 
-        socket.on('connect', function () {
-            var passcode = prompt("Please enter your passcode");
-            socket.emit('authenticate', { "Passcode": passcode, "isHost": false, "isClient": true }, (response) => {
-                if (response.success === true)
-                {
-                    console.log('User is authenticated');
-                    $scope.data = dummydata;
-                }
-                else
-                {
-                    alert("Passcode was invalid")
-                    socket.disconnect();
+            socket.on('connect', function () {
+                var passcode = prompt("Please enter your passcode");
+                socket.emit('authenticate', { "Passcode": passcode, "isHost": false, "isClient": true }, (response) => {
+                    if (response.success === true) {
+                        console.log('User is authenticated');
+                        $scope.data = dummydata;
+                    }
+                    else {
+                        alert("Passcode was invalid")
+                        socket.disconnect();
+                    }
+                });
+            });
+
+            socket.on('connect_failed', (error) => {
+                console.log(error)
+                connect()
+            });
+
+            socket.on('error', (error) => {
+                console.log(error)
+                connect()
+            });
+
+            socket.on('reconnect_failed', (error) => {
+                console.log(error)
+                connect()
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.log(reason)
+                connect()
+            });
+
+            socket.on('gamestart', function () {
+                $scope.data.loot = [];
+            });
+
+            socket.on('gameend', function () {
+                $scope.data.loot = [];
+            });
+
+            socket.on('addloot', function (data) {
+                $scope.data.loot.push(data);
+            });
+
+            socket.on('removeloot', function (data) {
+                for (item in $scope.data.loot) {
+                    if ($scope.data.loot[item].signature == data.signature) {
+                        $scope.loot.splice(item, 1);
+                        break;
+                    }
                 }
             });
-        });
 
-        socket.on('connect_failed', (error) => {
-            console.log(error)
-            connect()
-        });
-
-        socket.on('error', (error) => {
-            console.log(error)
-            connect()
-        });
-
-        socket.on('reconnect_failed', (error) => {
-            console.log(error)
-            connect()
-        });
-
-        socket.on('disconnect', (reason) => {
-            console.log(reason)
-            connect()
-        });
-
-        socket.on('gamestart', function() {
-            $scope.data.loot = [];
-        });
-
-        socket.on('gameend', function() {
-            $scope.data.loot = [];
-        });
-
-        socket.on('addloot', function(data) {
-            $scope.data.loot.push(data);
-        });
-
-        socket.on('removeloot', function(data) {
-            for (item in $scope.data.loot) {
-                if ($scope.data.loot[item].signature == data.signature) {
-                    $scope.loot.splice(item, 1);
-                    break;
-                }
-            }
-        });
-
-        socket.on('tick', function(data) {
-            handleTick(data);
-        })
+            socket.on('tick', function (data) {
+                handleTick(data);
+            })
+        }
     }
 
     $scope.changedValue = function () {
