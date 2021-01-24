@@ -21,9 +21,4 @@ public:
     {
         return TarkovPlayerInfo(GameProcess, GameProcess->Read<uint64_t>(Address + 0x28));
     }
-
-    TarkovPlayerHealth GetPlayerHealth()
-    {
-        return TarkovPlayerHealth(GameProcess, GameProcess->Read<uint64_t>(Address + 0x40));
-    }
 };

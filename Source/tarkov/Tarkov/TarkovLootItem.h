@@ -4,7 +4,7 @@
 class TarkovLootItem : public CachedMemoryObject
 {
 public:
-    std::size_t ID;
+    char ID[300];
 
     std::string LootName;
     Vector3 LootLocation;
@@ -15,23 +15,34 @@ public:
     {
     }
 
-    TarkovLootItem(WinProcess *GameProcess, uint64_t Address, int32_t ID)
+    TarkovLootItem(WinProcess *GameProcess, uint64_t Address)
         : CachedMemoryObject(GameProcess, Address)
     {
-        Vector3 LootLocation = GetLootLocation();
-        char id[200];
-        snprintf(id, sizeof(id), "%f%f%f", LootLocation.x, LootLocation.y, LootLocation.z);
-        ID = std::hash<std::string>{}(id);
-
         LootName = GetLootName();
         LootLocation = GetLootLocation();
         isCorpse = IsCorpse();
+
+        snprintf(ID, sizeof(ID), "%s+%i:%i:%i.", LootName.c_str(), (int)LootLocation.x, (int)LootLocation.y, (int)LootLocation.z);
+
         bCached = true;
     }
 
     bool operator==(const TarkovLootItem &other)
     {
         return other.ID == ID;
+    }
+
+    bool IsHighValue()
+    {
+        bool IsLedX = LootName.find("_transilluminator") != std::string::npos;
+        bool IsCardA = LootName.find("key_") != std::string::npos;
+        bool IsLab = LootName.find("lab") != std::string::npos;
+        bool IsIntel = LootName.find("info_intelligence") != std::string::npos;
+        bool IsGPU = LootName.find("video_card") != std::string::npos;
+        bool IsElec = LootName.find("electr_") != std::string::npos;
+        bool IsCorpseA = IsCorpse();
+
+        return IsLedX || IsCardA || IsLab || IsCorpseA || IsIntel || IsGPU || IsElec;
     }
 
 private:

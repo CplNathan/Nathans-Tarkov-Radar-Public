@@ -20,6 +20,8 @@ bool LoadGame(char *ProcessName, char *ModuleName, RelayAbstract *Relay)
     pid_t pid;
 #if (LMODE() == MODE_EXTERNAL())
     FILE *pipe = popen("pidof qemu-system-x86_64", "r");
+    if (pipe == nullptr)
+        return false;
     fscanf(pipe, "%d", &pid);
     pclose(pipe);
 #else
@@ -44,7 +46,7 @@ bool LoadGame(char *ProcessName, char *ModuleName, RelayAbstract *Relay)
                     {
                         Relay->UpdateVMStatus("");
                         ModuleFound = true;
-                        T(&i, o.info.baseAddress, Relay);
+                        T(&i, &o, Relay);
                     }
                 }
             }
@@ -96,13 +98,13 @@ static void init()
 
     current_socket = h.socket();
 
-    RelayAbstract *Relay = new RelayAbstract(current_socket, &l);
+    RelayAbstract Relay = RelayAbstract(current_socket, &l);
 
-    std::thread([Relay] {
+    std::thread([&] {
         while (true)
         {
             usleep(100000);
-            LoadGame<TarkovGame>((char *)"EscapeFromTarkov.exe", (char *)"UnityPlayer.dll", Relay);
+            LoadGame<TarkovGame>((char *)"EscapeFromTarkov.exe", (char *)"UnityPlayer.dll", &Relay);
         }
     }).detach();
 
@@ -112,7 +114,7 @@ static void init()
         l._connectedCond.wait(lk);
     }
 
-    Relay->Authenticate(arguments.args[1]);
+    Relay.Authenticate(arguments.args[1]);
 
     if (!l.connect_authenticated)
     {
@@ -124,8 +126,8 @@ static void init()
     char cursor[4] = {'/', '-', '\\', '|'};
     auto printStatus = [&]() {
         usleep(100000);
-        std::string VMStatus = Relay->ReadVMStatus();
-        bool gameReady = Relay->ReadGameReady();
+        std::string VMStatus = Relay.ReadVMStatus();
+        bool gameReady = Relay.ReadGameReady();
         printf("\rSocket Status: %s %c - VM Status:%s - Game Status: %s %c",
                l.connect_active ? (l.connect_authenticated ? "Online Auth" : "Online No-Auth") : l.connect_finish && !l.connect_authenticated ? "Offline No-Auth" : "Offline No-Connect",
                l.connect_active && l.connect_authenticated ? cursor[pos] : cursor[0],

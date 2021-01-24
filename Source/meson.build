@@ -1,8 +1,8 @@
 project('tarkovradar', 'cpp', 'c', version : '1.0', default_options : ['c_std=c99', 'cpp_std=c++17'])
 
-compile_args = ['-D_POSIX_C_SOURCE=200809L', '-D_DEFAULT_SOURCE', '-pedantic', '-DMVERBOSE=4', '-DMTR_ENABLED', '-DREAD_CHECK', '-DASIO_STANDALONE', '-pthread']
+compile_args = ['-D_POSIX_C_SOURCE=200809L', '-D_DEFAULT_SOURCE', '-pedantic', '-DMVERBOSE=0', '-DMTR_ENABLED', '-DREAD_CHECK', '-DASIO_STANDALONE', '-pthread']
 compile_args_external = ['-DLMODE=MODE_EXTERNAL', '-fsanitize=address']
-compile_args_internal = ['-DLMODE=MODE_QEMU_INJECT', '-DMVERBOSE=4']
+compile_args_internal = ['-DLMODE=MODE_QEMU_INJECT', '-DMVERBOSE=0']
 link_args_external = ['-lasan']
 link_args_internal = []
 link_args = []
@@ -44,7 +44,7 @@ threadcxx = cxx.find_library('pthread', required : true)
 vmread_files = ['lib/vmread/mem.c', 'lib/vmread/wintools.c', 'lib/vmread/pmparser.c', 'lib/vmread/vmmem.c']
 hlapi_files = ['lib/vmread/hlapi/windll.cpp', 'lib/vmread/hlapi/winprocess.cpp', 'lib/vmread/hlapi/winprocesslist.cpp']
 socketio_files = ['lib/socketio/src/sio_client.cpp', 'lib/socketio/src/sio_socket.cpp', 'lib/socketio/src/internal/sio_client_impl.cpp', 'lib/socketio/src/internal/sio_packet.cpp']
-tarkov_files = ['main.cpp', 'tarkov/Tarkov/Tarkov.cpp']
+tarkov_files = ['main.cpp', 'tarkov/Tarkov/Tarkov.cpp', 'tarkov/Helper/pattern_scan.cpp']
 
 inccustomlibs = [include_directories('tarkov'), include_directories('socket'), include_directories('lib/asio/asio/include'), include_directories('lib/catch/include'), include_directories('lib/rapidjson/include'), include_directories('lib/websocketpp'), include_directories('lib/socketio/src'), include_directories('lib/vmread')]
 

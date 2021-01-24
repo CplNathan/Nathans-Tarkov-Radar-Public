@@ -6,8 +6,8 @@
 class UnityGame : public BaseGame
 {
 public:
-    UnityGame(WinProcess *GameProcess, uint64_t Address, RelayAbstract *Relay)
-        : BaseGame(GameProcess, Address, Relay)
+    UnityGame(WinProcess *GameProcess, WinDll* Module, RelayAbstract *Relay)
+        : BaseGame(GameProcess, Module, Relay)
     {
     }
 

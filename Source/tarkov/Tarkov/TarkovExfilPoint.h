@@ -38,6 +38,29 @@ private:
     }
 
 public:
+    Matrix4x4 GetLocationMatrixTest()
+    {
+        uint64_t posa = GameProcess->Read<uint64_t>(Address + 0x10);
+        uint64_t posb = GameProcess->Read<uint64_t>(posa + 0x30);
+        uint64_t posc = GameProcess->Read<uint64_t>(posb + 0x30);
+        uint64_t transforms = GameProcess->Read<uint64_t>(posc + 0x8);
+        uint64_t transformptr = GameProcess->Read<uint64_t>(transforms + 0x28);
+        uint64_t transform = GameProcess->Read<uint64_t>(transformptr + 0x10);
+        return GameProcess->Read<Matrix4x4>(transform + 0x28);
+    }
+
+	Vector3 GetCoordsFromMatrixTest()
+	{
+		Vector3 newCoords;
+		Matrix4x4 oldMatrix = GetLocationMatrixTest();
+
+		newCoords.x = oldMatrix.D.x;
+		newCoords.y = oldMatrix.D.y;
+		newCoords.z = oldMatrix.D.z;
+
+		return newCoords;
+	}
+
     float GetExitTime()
     {
         return GameProcess->Read<float>(m_eExfilSettings + 0x24);
@@ -60,7 +83,7 @@ public:
 
     float GetExfilStartTime()
     {
-        return GameProcess->Read<float>(Address + 0xAC);
+        return GameProcess->Read<float>(Address + 0x38);
     }
 
     UnityEngineString GetHint()

@@ -32,8 +32,6 @@ private:
     sio::socket::ptr Socket;
     connection_listener *Listener;
 
-    std::mutex m;
-
     std::string VMStatus = " Unknown";
     bool gameReady = false;
 
@@ -48,26 +46,21 @@ public:
 
     std::string ReadVMStatus()
     {
-        std::lock_guard<std::mutex> lock(m);
         return this->VMStatus;
     }
 
     void UpdateVMStatus(std::string message)
     {
-        std::lock_guard<std::mutex> lock(m);
         this->VMStatus = message;
     }
 
     bool ReadGameReady()
     {
-        std::lock_guard<std::mutex> lock(m);
         return gameReady;
     }
 
     void UpdateGameReady(bool ready)
     {
-        std::lock_guard<std::mutex> lock(m);
-
         if (this->gameReady != ready)
             UpdateGame(ready);
 
@@ -85,8 +78,6 @@ public:
         if (!Listener->connect_active)
             return;
 
-        std::lock_guard<std::mutex> lock(m);
-
         auto it = std::find(SentPlayers.begin(), SentPlayers.end(), Player);
         if (it != SentPlayers.end())
         {
@@ -98,6 +89,7 @@ public:
         {
             Socket->emit("newplayer", TarkovMessageBuilder::NewPlayerMessage(Player));
             TrackedMember<TarkovPlayer> NewMember(Player);
+            NewMember.i = i;
             SentPlayers.push_back(NewMember);
         }
     }
@@ -106,8 +98,6 @@ public:
     {
         if (!Listener->connect_active)
             return;
-
-        std::lock_guard<std::mutex> lock(m);
 
         std::list<TrackedMember<TarkovPlayer>> OldPlayers;
         for (TrackedMember<TarkovPlayer> Player : SentPlayers)
@@ -131,8 +121,6 @@ public:
         if (!Listener->connect_active)
             return;
 
-        std::lock_guard<std::mutex> lock(m);
-
         auto it = std::find(SentLoot.begin(), SentLoot.end(), Loot);
         if (it != SentLoot.end())
         {
@@ -143,6 +131,7 @@ public:
         {
             Socket->emit("addloot", TarkovMessageBuilder::AddLootMessage(Loot));
             TrackedMember<TarkovLootItem> NewLoot(Loot);
+            NewLoot.i = i;
             SentLoot.push_back(NewLoot);
         }
     }
@@ -151,8 +140,6 @@ public:
     {
         if (!Listener->connect_active)
             return;
-
-        std::lock_guard<std::mutex> lock(m);
 
         std::list<TrackedMember<TarkovLootItem>> OldLoot;
         for (TrackedMember<TarkovLootItem> Loot : SentLoot)
@@ -176,8 +163,6 @@ public:
         if (!Listener->connect_active)
             return;
 
-        std::lock_guard<std::mutex> lock(m);
-
         auto it = std::find(SentExfils.begin(), SentExfils.end(), Exfil);
         if (it != SentExfils.end())
         {
@@ -189,6 +174,7 @@ public:
         {
             Socket->emit("addexfil", TarkovMessageBuilder::AddExfilMessage(Exfil));
             TrackedMember<TarkovExfilPoint> NewExfil(Exfil);
+            NewExfil.i = i;
             SentExfils.push_back(NewExfil);
         }
     }
@@ -198,8 +184,6 @@ public:
         if (!Listener->connect_active)
             return;
 
-        std::lock_guard<std::mutex> lock(m);
-
         if (NewState)
         {
             Socket->emit("gamestart");
@@ -207,6 +191,9 @@ public:
         else
         {
             Socket->emit("gameend");
+            SentExfils.empty();
+            SentLoot.empty();
+            SentPlayers.empty();
         }
     }
 

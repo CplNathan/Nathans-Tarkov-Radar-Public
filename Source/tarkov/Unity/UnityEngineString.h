@@ -31,7 +31,7 @@ public:
         
     }
 
-    std::string GetString(bool bGetCache = true)
+    std::string GetString()
     {
         std::string result;
 

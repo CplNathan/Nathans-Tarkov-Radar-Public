@@ -44,22 +44,27 @@ public:
 
     TarkovMovementContext GetMovementContext()
     {
-        return TarkovMovementContext(GameProcess, GameProcess->Read<uint64_t>(Address + 0x38));
+        return TarkovMovementContext(GameProcess, GameProcess->Read<uint64_t>(Address + 0x40));
     }
 
     TarkovPlayerBody GetPlayerBody()
     {
-        return TarkovPlayerBody(GameProcess, GameProcess->Read<uint64_t>(Address + 0x88));
+        return TarkovPlayerBody(GameProcess, GameProcess->Read<uint64_t>(Address + 0xA8));
     }
 
     TarkovPlayerProfile GetPlayerProfile()
     {
-        return TarkovPlayerProfile(GameProcess, GameProcess->Read<uint64_t>(Address + 0x3A8));
+        return TarkovPlayerProfile(GameProcess, GameProcess->Read<uint64_t>(Address + 0x440));
     }
 
     TarkovHandsController GetPlayerHandsController()
     {
-        return TarkovHandsController(GameProcess, GameProcess->Read<uint64_t>(Address + 0x3F0));
+        return TarkovHandsController(GameProcess, GameProcess->Read<uint64_t>(Address + 0x488)); //Needs new offsets
+    }
+
+    TarkovPlayerHealth GetPlayerHealth()
+    {
+        return TarkovPlayerHealth(GameProcess, GameProcess->Read<uint64_t>(Address + 0x470)); //Does not work
     }
 
     void DebugDump()
@@ -75,9 +80,6 @@ public:
 
         printf("Is Local?: %s\tIs Scav?:%s\n", IsLocalPlayer() ? "Yes" : "No", IsScav() ? "Yes" : "No");
 
-        TarkovHealthInfo HealthInfo = PlayerProfile.GetPlayerHealth().GetHealthInfo();
-        printf("Player Health(current/max):\t%f/%f\n", HealthInfo.GetHealth(), HealthInfo.GetMaxHealth());
-
         Vector3 PlayerCoordinates = GetMovementContext().GetLocalPosition();
         printf("Player Coordinates (x-y-z):\t%f-%f-%f\n", PlayerCoordinates.x, PlayerCoordinates.y, PlayerCoordinates.z);
 
@@ -86,5 +88,8 @@ public:
 
         Vector2 ViewAngle2 = GetMovementContext().GetViewAngles2();
         printf("View Angle 2 (x-y):\t%f-%f\n", ViewAngle2.x, ViewAngle2.y);
+
+        float health = GetPlayerHealth().GetMaxHealthSum();
+        printf("Health:\t%f\n", health);
     }
 };

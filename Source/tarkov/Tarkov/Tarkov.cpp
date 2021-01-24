@@ -13,16 +13,17 @@ void TarkovGame::GameMain()
 {
     while (true)
     {
+        if (GameProcess == nullptr || Module == nullptr)
+            break;
+
         sleep(1);
         GOM = GameObjectManager(GameProcess, GameProcess->Read<uint64_t>(Address + Offsets.GameObjectManager));
         LocalGameWorld = FindLocalGameWorld();
 
-        printf("Game Object Manager: %lx\tLocal Game World: %lx\n", GOM.GetAddress(), LocalGameWorld);
-
         auto gameReady = [this]() {
-            bool GOMValid = !(GOM.GetAddress() == 0x0);
-            bool LGWValid = !(LocalGameWorld == 0x0);
-            bool HasPlayers = !(GetPlayerCount() == 0);
+            bool GOMValid = (GOM.GetAddress() != 0x0);
+            bool LGWValid = (LocalGameWorld != 0x0);
+            bool HasPlayers = (GetPlayerCount() > 0);
 
             return GOMValid && LGWValid && HasPlayers;
         };
@@ -32,7 +33,7 @@ void TarkovGame::GameMain()
         int i = 0;
         while (gameReady())
         {
-            usleep(25000);
+            usleep(100000);
             ++i;
 
             // Player Handling
@@ -41,6 +42,7 @@ void TarkovGame::GameMain()
             // Update existing player
             for (TarkovPlayer Player : AllPlayers)
             {
+                //Player.DebugDump();
                 RelayManager->UpdatePlayer(Player, i);
             }
 
@@ -69,7 +71,7 @@ void TarkovGame::GameMain()
 
 int32_t TarkovGame::GetPlayerCount()
 {
-    uint64_t m_pPlayerList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x70);
+    uint64_t m_pPlayerList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x80);
 
     return GameProcess->Read<int32_t>(m_pPlayerList + 0x18);
 }
@@ -78,7 +80,7 @@ std::list<TarkovPlayer> TarkovGame::GetAllPlayers()
 {
     std::list<TarkovPlayer> PlayerList;
 
-    uint64_t m_pPlayerList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x70);
+    uint64_t m_pPlayerList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x80);
 
     int32_t m_pPlayerListSize = GameProcess->Read<int32_t>(m_pPlayerList + 0x18);
     uint64_t m_pPlayerListObject = GameProcess->Read<uint64_t>(m_pPlayerList + 0x10);
@@ -96,14 +98,14 @@ std::list<TarkovLootItem> TarkovGame::GetAllLoot()
 {
     std::list<TarkovLootItem> LootList;
 
-    uint64_t m_lLootList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x50);
+    uint64_t m_lLootList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x60);
 
     int32_t m_lLootListSize = GameProcess->Read<int32_t>(m_lLootList + 0x18);
     uint64_t m_lLootListObject = GameProcess->Read<uint64_t>(m_lLootList + 0x10);
 
     for (int i = 0; i < m_lLootListSize; i++)
     {
-        TarkovLootItem m_lItem = TarkovLootItem(GameProcess, GameProcess->Read<uint64_t>(m_lLootListObject + 0x20 + (i * 0x8)), i);
+        TarkovLootItem m_lItem = TarkovLootItem(GameProcess, GameProcess->Read<uint64_t>(m_lLootListObject + 0x20 + (i * 0x8)));
         Vector3 coord = m_lItem.LootLocation;
         if (coord.x == 0 && coord.y == 0 && coord.z == 0)
             continue;
@@ -119,6 +121,7 @@ std::list<TarkovExfilPoint> TarkovGame::GetExfilArray()
     std::list<TarkovExfilPoint> ExfilList;
 
     uint64_t m_eExfilController = GameProcess->Read<uint64_t>(GameProcess->Read<uint64_t>(LocalGameWorld + 0x18) + 0x20);
+    //uint64_t m_eExfilController = GameProcess->Read<uint64_t>(GameProcess->Read<uint64_t>(LocalGameWorld + 0x18) + 0x28); //scav
 
     int64_t m_eExfilListSize = GameProcess->Read<int64_t>(m_eExfilController + 0x18);
     for (int i = 0; i < m_eExfilListSize; i++)
