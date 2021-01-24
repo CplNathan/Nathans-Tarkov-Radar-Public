@@ -3,3 +3,5 @@
 
 wwwCheats/www/tarkov/js/* linguist-vendored
 wwwCheats/www/tarkov/css/* linguist-vendored
+wwwCheats/www/tarkov/js/* -linguist-detectable
+wwwCheats/www/tarkov/css/* -linguist-detectable
