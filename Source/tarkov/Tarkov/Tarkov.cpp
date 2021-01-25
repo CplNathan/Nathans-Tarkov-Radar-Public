@@ -83,7 +83,7 @@ std::vector<TarkovPlayer> TarkovGame::GetAllPlayers()
     uint64_t m_pPlayerList = GameProcess->Read<uint64_t>(LocalGameWorld + 0x80);
 
     int32_t m_pPlayerListSize = GameProcess->Read<int32_t>(m_pPlayerList + 0x18);
-    std::vector<uint64_t> PlayerListPtr(m_pPlayerList, 0x0);
+    std::vector<uint64_t> PlayerListPtr(m_pPlayerListSize, 0x0);
 
     uint64_t m_pPlayerListObject = GameProcess->Read<uint64_t>(m_pPlayerList + 0x10);
 
